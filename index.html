@@ -87,7 +87,7 @@ const DX=[0,-1,-.5,0,.5,1,0],HX=[-1,-1,-.5,0,.5,1,1],DY=[0,.35,.85,1,.85,.35,0],
 const PW=[{e:'⚡',c:'#ffd23f'},{e:'⭐',c:'#ff9f1c'},{e:'💥',c:'#ef476f'},{e:'👻',c:'#8d99ff'},{e:'🔥',c:'#ff7a1a'}];
 
 function theme(){const s=getComputedStyle(document.documentElement);for(const k of['snow','shade','ink','tree','tree2','trunk','rock','hud'])C[k]=s.getPropertyValue('--'+k).trim()}
-function resize(){const d=Math.min(devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;Z=Math.max(.55,Math.min(1,W/800,H/600));cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0)}
+function resize(){const d=Math.min(devicePixelRatio||1,2);W=cv.clientWidth;H=cv.clientHeight;Z=Math.max(.4,Math.min(1,W/1000,H/700));cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0)}
 addEventListener('resize',resize);
 matchMedia('(prefers-color-scheme:dark)').addEventListener('change',theme);
 new MutationObserver(theme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
