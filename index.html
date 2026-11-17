@@ -34,6 +34,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 .lb .r{width:26px;opacity:.7}.lb .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tab{font-size:12px;padding:3px 10px;margin:0 3px;box-shadow:none;background:transparent;color:var(--ink);border-width:1.5px}
 .tab.on{background:var(--ink);color:var(--snow)}
+.tab.on#mi{background:#d90429;border-color:#d90429;color:#fff}
 input{font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:8px;background:transparent;color:var(--ink);width:70%;text-align:center;margin:6px 0}
 .sec{background:transparent;color:var(--ink);box-shadow:none;font-size:15px;padding:9px 14px}
 #skg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
@@ -57,7 +58,7 @@ input{font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);b
 <li>🦝 <b>Raccoon</b>: found after 2,000 m, he fights a chaser for you</li>
 </ul>
 <p class="sm">Arrows or A/D to steer, Space for a 0.9 s double-speed burst (or tap the ⚡ button), down to go straight. Turn fully sideways to stop, keep holding to sidestep. On touch, hold left or right of the skier.</p>
-<div class="modes" style="margin:8px 0"><button class="tab on" id="mn">Normal</button><button class="tab" id="me">Easy · 30% of the obstacles</button></div>
+<div class="modes" style="margin:8px 0"><button class="tab on" id="mn">Normal</button><button class="tab" id="me">Easy</button><button class="tab" id="mi">Insane</button></div>
 <div class="modes" id="zrow" style="margin:8px 0;display:none"><span style="font-size:12px">Zoom</span> <button class="tab" id="zs">Small</button><button class="tab on" id="zm">Medium</button><button class="tab" id="zl">Large</button></div>
 <input id="nm" maxlength="14" placeholder="Your name" autocomplete="off" aria-label="Your name"><br>
 <button id="go">Start skiing</button> <button id="seelb" class="sec">Leaderboard</button> <button id="skb" class="sec">Skins</button>
@@ -107,21 +108,22 @@ function cell(i,j){
  return null}
 const gc=(i,j)=>got.has(i+','+j)?null:cell(i,j);
 
-let local=[],lastT=0,pname='',easy=false,skin=0;
+let local=[],lastT=0,pname='',easy=false,insane=false,skin=0;
 try{local=JSON.parse(localStorage.getItem('yetirun-top')||'[]')}catch(e){}
 try{pname=localStorage.getItem('yetirun-name')||''}catch(e){}
-try{easy=localStorage.getItem('yetirun-easy')==='1'}catch(e){}
+try{easy=localStorage.getItem('yetirun-easy')==='1';insane=localStorage.getItem('yetirun-insane')==='1'}catch(e){}
+if(insane)easy=false;
 try{skin=+localStorage.getItem('yetirun-skin')||0}catch(e){}
 try{const zv=localStorage.getItem('yetirun-zoom');zoom=['s','m','l'].includes(zv)?zv:'m'}catch(e){}
 if(!(skin>=0&&skin<32)||best<thr(skin))skin=0;
-function saveLocal(d){local.push({d,t:lastT,n:pname||'Skier',e:easy});local.sort((a,b)=>b.d-a.d);local=local.slice(0,10);try{localStorage.setItem('yetirun-top',JSON.stringify(local))}catch(e){}}
+function saveLocal(d){local.push({d,t:lastT,n:pname||'Skier',e:easy,i:insane});local.sort((a,b)=>b.d-a.d);local=local.slice(0,10);try{localStorage.setItem('yetirun-top',JSON.stringify(local))}catch(e){}}
 function renderLB(){
  for(const el of document.querySelectorAll('.lb')){
   el.textContent='';
   const h=document.createElement('h2');h.textContent='Top 10 descents';el.appendChild(h);
   const ol=document.createElement('ol');
   local.forEach((r,i)=>{const li=document.createElement('li');if(r.t===lastT)li.className='me';
-   for(const[tx,cl]of[[(i+1)+'.','r'],[(r.n||'Skier')+(r.e?' · easy':''),'n'],[r.d+' m','d']]){const sp=document.createElement('span');sp.className=cl;sp.textContent=tx;li.appendChild(sp)}
+   for(const[tx,cl]of[[(i+1)+'.','r'],[(r.n||'Skier')+(r.i?' · insane':r.e?' · easy':''),'n'],[r.d+' m','d']]){const sp=document.createElement('span');sp.className=cl;sp.textContent=tx;li.appendChild(sp)}
    ol.appendChild(li)});
   if(!local.length){const li=document.createElement('li');li.textContent='No runs yet. Go ski!';ol.appendChild(li)}
   el.appendChild(ol)}}
@@ -173,6 +175,7 @@ function grant(p){
 function useBoost(){if(state==='play'&&S.charges>0&&S.pw.speed<=0&&S.crash<=0){S.charges--;S.pw.speed=.9}}
 function crash(){S.crash=1.1;S.v=0;shake=.3;trail.push(null)}
 
+const K=()=>insane?2:1;
 function update(dt){
  S.dist=Math.max(S.dist,S.y/10);
  for(const k in S.pw)S.pw[k]=Math.max(0,S.pw[k]-dt);
@@ -191,7 +194,7 @@ function update(dt){
  else{
   S.v+=((Math.abs(S.dir)===3?0:320)-S.v)*Math.min(1,dt*2.5);
   const px=S.x,py=S.y;
-  const am=(S.air>0?2:1)*(S.pw.speed>0?2:1)*(S.pw.sup>0?1.5:1);S.x+=S.v*DX[S.dir+3]*dt*am;S.y+=S.v*DY[S.dir+3]*dt*am;S.x+=S.side*170*dt;
+  const am=K()*(S.air>0?2:1)*(S.pw.speed>0?2:1)*(S.pw.sup>0?1.5:1);S.x+=S.v*DX[S.dir+3]*dt*am;S.y+=S.v*DY[S.dir+3]*dt*am;S.x+=S.side*170*K()*dt;
   const l=trail[trail.length-1];
   if(!l||Math.hypot(S.x-l.x,S.y-l.y)>8){trail.push({x:S.x,y:S.y});if(trail.length>160)trail.shift()}
  }
@@ -218,13 +221,13 @@ function update(dt){
  }
  // the chaser
  if(!Y.on){
-  if(!Y.seen&&S.dist>=150){spawnYeti();say('You’re being chased!')}
+  if(!Y.seen&&S.dist>=(insane?50:150)){spawnYeti();say('You’re being chased!')}
   else if(Y.seen&&(Y.respawn-=dt)<=0){spawnYeti();say('He’s back…')}
  }else{
   Y.anim+=dt*9;
   if(Y.stun>0)Y.stun-=dt;
   else{
-   const sp=250+Math.min(130,S.dist*.035)+Y.rage,gh=S.pw.ghost>0;
+   const sp=(250+Math.min(130,S.dist*.035)+Y.rage)*K(),gh=S.pw.ghost>0;
    let tx=S.x,ty=S.y;
    if(gh){if((Y.wt-=dt)<=0){Y.wt=1+Math.random();Y.wx=Y.x+(Math.random()-.5)*600}tx=Y.wx;ty=Y.y+200}
    const dx=tx-Y.x,dy=ty-Y.y,d=Math.hypot(dx,dy)||1,k=gh?.4:1;
@@ -364,15 +367,15 @@ $('seelb').onclick=()=>{renderLB();$('start').classList.add('hide');$('lbv').cla
 $('lbback').onclick=()=>{$('lbv').classList.add('hide');$('start').classList.remove('hide')};
 $('skb').onclick=()=>{renderSkins();$('start').classList.add('hide');$('skv').classList.remove('hide')};
 $('skback').onclick=()=>{$('skv').classList.add('hide');$('start').classList.remove('hide')};
-function setMode(e){easy=e;$('mn').classList.toggle('on',!e);$('me').classList.toggle('on',e);try{localStorage.setItem('yetirun-easy',e?'1':'0')}catch(x){}}
-$('mn').onclick=()=>setMode(false);$('me').onclick=()=>setMode(true);
+function setMode(m){easy=m==='e';insane=m==='i';$('mn').classList.toggle('on',m==='n');$('me').classList.toggle('on',easy);$('mi').classList.toggle('on',insane);try{localStorage.setItem('yetirun-easy',easy?'1':'0');localStorage.setItem('yetirun-insane',insane?'1':'0')}catch(x){}}
+$('mn').onclick=()=>setMode('n');$('me').onclick=()=>setMode('e');$('mi').onclick=()=>setMode('i');
 function setZoom(m){zoom=m;for(const[k,id]of[['s','zs'],['m','zm'],['l','zl']])$(id).classList.toggle('on',k===m);try{localStorage.setItem('yetirun-zoom',m)}catch(x){}resize()}
 $('zs').onclick=()=>setZoom('s');$('zm').onclick=()=>setZoom('m');$('zl').onclick=()=>setZoom('l');
 $('go').onclick=start;$('again').onclick=start;$('menu').onclick=()=>{reset();state='ready';$('over').classList.add('hide');$('start').classList.remove('hide')};
 
 let last=0;
-function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000||0);last=t;T+=dt;if(state==='play'){const n=Math.max(1,Math.ceil(dt/.012));for(let k=0;k<n&&state==='play';k++)update(dt/n)}draw()}
-theme();resize();reset();requestAnimationFrame(loop);$('nm').value=$('nm2').value=pname;setMode(easy);if(TOUCH)$('zrow').style.display='';setZoom(zoom);
+function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000||0);last=t;T+=dt;if(state==='play'){const n=Math.max(1,Math.ceil(dt/(.012/K())));for(let k=0;k<n&&state==='play';k++)update(dt/n)}draw()}
+theme();resize();reset();requestAnimationFrame(loop);$('nm').value=$('nm2').value=pname;setMode(insane?'i':easy?'e':'n');if(TOUCH)$('zrow').style.display='';setZoom(zoom);
 })();
 </script>
 </body>
