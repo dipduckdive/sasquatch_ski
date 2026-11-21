@@ -43,6 +43,8 @@ input{font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);b
 .sk.on{border-color:var(--btn)}.sk:disabled{cursor:default;opacity:.8}
 .sk canvas{width:100%;max-width:52px;height:auto;aspect-ratio:3/4}
 @media(min-width:560px){.sk{font-size:10px}}
+#cur{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;font-weight:700;font-size:14px;cursor:pointer}
+#cur canvas{width:36px;height:48px}
 </style>
 </head>
 <body>
@@ -51,6 +53,14 @@ input{font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);b
 <div class="ov" id="start"><div class="card">
 <h1>Sasquatch Ski</h1>
 <p>Ski as far as you can. When the chaser wakes, don’t stop.</p>
+<div id="cur" title="Change skin"><canvas id="curc" width="72" height="96"></canvas><span>Skin: <span id="curn"></span></span></div>
+<div class="modes" style="margin:8px 0"><button class="tab on" id="mn">Normal</button><button class="tab" id="me">Easy</button><button class="tab" id="mi">Insane</button></div>
+<div class="modes" id="zrow" style="margin:8px 0;display:none"><span style="font-size:12px">Zoom</span> <button class="tab" id="zs">Small</button><button class="tab on" id="zm">Medium</button><button class="tab" id="zl">Large</button></div>
+<input id="nm" maxlength="14" placeholder="Your name" autocomplete="off" aria-label="Your name"><br>
+<button id="go">Start skiing</button><br>
+<button id="seelb" class="sec">Leaderboard</button> <button id="skb" class="sec">Skins</button> <button id="helpb" class="sec">Instructions</button>
+</div></div>
+<div class="ov hide" id="helpv"><div class="card"><h1 style="font-size:24px">How to play</h1>
 <ul>
 <li>⚡ <b>Speed Up</b>: banked (3 to start, max 5). Grab 5 for 🔥 Super!</li>
 <li>⭐ <b>Invincible</b>: smash trees, bounce him back</li>
@@ -60,12 +70,8 @@ input{font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);b
 <li>🦝 <b>Raccoon</b>: found after 2,000 m, he fights a chaser for you</li>
 </ul>
 <p class="sm">Arrows or A/D to steer, Space for a 0.9 s double-speed burst (or tap the ⚡ button), down to go straight. Turn fully sideways to stop, keep holding to sidestep. On touch, press anywhere, then drag left or right from where you first touched.</p>
-<div class="modes" style="margin:8px 0"><button class="tab on" id="mn">Normal</button><button class="tab" id="me">Easy</button><button class="tab" id="mi">Insane</button></div>
-<div class="modes" id="zrow" style="margin:8px 0;display:none"><span style="font-size:12px">Zoom</span> <button class="tab" id="zs">Small</button><button class="tab on" id="zm">Medium</button><button class="tab" id="zl">Large</button></div>
-<input id="nm" maxlength="14" placeholder="Your name" autocomplete="off" aria-label="Your name"><br>
-<button id="go">Start skiing</button> <button id="seelb" class="sec">Leaderboard</button> <button id="skb" class="sec">Skins</button>
-</div></div>
-<div class="ov hide" id="skv"><div class="card" style="max-width:min(640px,100%)"><h1 style="font-size:24px">Skins</h1><p class="sm" id="skinfo"></p><div id="skg"></div><button id="skback">Back</button></div></div>
+<button id="helpback">Back</button></div></div>
+<div class="ov hide" id="skv"><div class="card" style="max-width:min(640px,100%)"><h1 style="font-size:24px">Skins</h1><p class="sm" id="skinfo"></p><div id="skg"></div></div></div>
 <div class="ov hide" id="lbv"><div class="card"><div class="lb"></div><button id="lbback">Back</button></div></div>
 <div class="ov low hide" id="over"><div class="card">
 <h1>Caught!</h1>
@@ -152,16 +158,17 @@ function renderSkins(){
   const c=document.createElement('canvas');c.width=96;c.height=128;const k=c.getContext('2d'),f=Math.min(96/AW,128/AH);
   if(ATL.complete&&ATL.naturalWidth){k.drawImage(ATL,(i%8)*AW,((i/8)|0)*AH,AW,AH,(96-AW*f)/2,128-AH*f,AW*f,AH*f);if(!ok){k.globalCompositeOperation='source-in';k.fillStyle='rgba(20,30,50,.45)';k.fillRect(0,0,96,128)}}
   const sp=document.createElement('span');sp.textContent=ok?nm:'🔒 '+thr(i)+' m';
-  b.append(c,sp);b.onclick=()=>{skin=i;try{localStorage.setItem('yetirun-skin',i)}catch(e){}renderSkins()};g.appendChild(b)});
- $('skinfo').textContent=n+' of '+SKN.length+' unlocked · best '+best+' m'}
-ATL.onload=()=>{if(!$('skv').classList.contains('hide'))renderSkins()};
+  b.append(c,sp);b.onclick=()=>{skin=i;try{localStorage.setItem('yetirun-skin',i)}catch(e){}renderCurSkin();$('skv').classList.add('hide');$('start').classList.remove('hide')};g.appendChild(b)});
+ $('skinfo').textContent=n+' of '+SKN.length+' unlocked · best '+best+' m · tap a skin to use it'}
+function renderCurSkin(){const c=$('curc'),k=c.getContext('2d');k.clearRect(0,0,c.width,c.height);if(ATL.complete&&ATL.naturalWidth){const f=Math.min(c.width/AW,c.height/AH);k.drawImage(ATL,(skin%8)*AW,((skin/8)|0)*AH,AW,AH,(c.width-AW*f)/2,c.height-AH*f,AW*f,AH*f)}$('curn').textContent=SKN[skin]}
+ATL.onload=()=>{renderCurSkin();if(!$('skv').classList.contains('hide'))renderSkins()};
 function reset(){
  S={x:0,y:0,dir:0,v:200,crash:0,grace:0,air:0,charges:3,sc:0,coon:null,dist:0,bonus:0,kills:0,pw:{speed:0,inv:0,ghost:0,sup:0}};
  Y={g:pickChaser(),on:false,seen:false,x:0,y:-700,stun:0,rage:0,respawn:0,anim:0,wt:0,wx:0};
  got.clear();trail=[];msgs=[];flash=0;shake=0}
 const say=s=>{msgs=[{t:2.4,s}]};
 const score=()=>Math.floor(S.dist)+S.bonus;
-function start(){reset();state='play';$('start').classList.add('hide');$('over').classList.add('hide');$('lbv').classList.add('hide');$('skv').classList.add('hide')}
+function start(){reset();state='play';$('start').classList.add('hide');$('over').classList.add('hide');$('lbv').classList.add('hide');$('skv').classList.add('hide');$('helpv').classList.add('hide')}
 function spawnYeti(){Y.on=true;Y.seen=true;Y.stun=0;Y.x=S.x+(Math.random()-.5)*400;Y.y=S.y-700}
 function gameOver(win){
  state='over';overAt=performance.now();if(win)S.dist=Math.max(S.dist,FIN);const sc=score();lastT=Date.now();saveLocal(sc,win);
@@ -378,7 +385,9 @@ for(const n of[$('nm'),$('nm2')])n.oninput=e=>{pname=e.target.value.trim().slice
 $('seelb').onclick=()=>{renderLB();$('start').classList.add('hide');$('lbv').classList.remove('hide')};
 $('lbback').onclick=()=>{$('lbv').classList.add('hide');$('start').classList.remove('hide')};
 $('skb').onclick=()=>{renderSkins();$('start').classList.add('hide');$('skv').classList.remove('hide')};
-$('skback').onclick=()=>{$('skv').classList.add('hide');$('start').classList.remove('hide')};
+$('helpb').onclick=()=>{$('start').classList.add('hide');$('helpv').classList.remove('hide')};
+$('helpback').onclick=()=>{$('helpv').classList.add('hide');$('start').classList.remove('hide')};
+$('cur').onclick=()=>$('skb').click();
 function setMode(m){easy=m==='e';insane=m==='i';$('mn').classList.toggle('on',m==='n');$('me').classList.toggle('on',easy);$('mi').classList.toggle('on',insane);try{localStorage.setItem('yetirun-easy',easy?'1':'0');localStorage.setItem('yetirun-insane',insane?'1':'0')}catch(x){}}
 $('mn').onclick=()=>setMode('n');$('me').onclick=()=>setMode('e');$('mi').onclick=()=>setMode('i');
 function setZoom(m){zoom=m;for(const[k,id]of[['s','zs'],['m','zm'],['l','zl']])$(id).classList.toggle('on',k===m);try{localStorage.setItem('yetirun-zoom',m)}catch(x){}resize()}
@@ -387,7 +396,7 @@ $('go').onclick=start;$('again').onclick=start;$('menu').onclick=()=>{reset();st
 
 let last=0;
 function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-last)/1000||0);last=t;T+=dt;if(state==='play'){const n=Math.max(1,Math.ceil(dt/(.012/K())));for(let k=0;k<n&&state==='play';k++)update(dt/n)}draw()}
-theme();resize();reset();requestAnimationFrame(loop);$('nm').value=$('nm2').value=pname;setMode(insane?'i':easy?'e':'n');if(TOUCH)$('zrow').style.display='';setZoom(zoom);
+theme();resize();reset();renderCurSkin();requestAnimationFrame(loop);$('nm').value=$('nm2').value=pname;setMode(insane?'i':easy?'e':'n');if(TOUCH)$('zrow').style.display='';setZoom(zoom);
 })();
 </script>
 </body>
